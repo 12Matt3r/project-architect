@@ -88,6 +88,7 @@ class BlueprintResponse:
     recursive_improvement: List[SecurityCritique]
     vision_analysis: Optional[Dict[str, Any]] = None
     evaluation_metrics: Optional[Dict[str, Any]] = None
+    idea_viability_score: Optional[int] = None
 
 # ============================================================================
 # ENHANCEMENT 1: RECURSIVE SELF-IMPROVEMENT FOR PLAN VALIDATION (RSIPV)
@@ -651,6 +652,9 @@ class ProjectArchitect:
             self.evaluation_metrics['execution_times'].append(execution_time)
             self.evaluation_metrics['avg_execution_time'] = sum(self.evaluation_metrics['execution_times']) / len(self.evaluation_metrics['execution_times'])
             
+            # Rate idea viability
+            idea_viability_score = self._rate_idea_viability(user_input)
+
             # Calculate blueprint quality score (1-10)
             quality_score = self._evaluate_blueprint_quality(improved_blueprint, execution_steps, recommended_toolkit)
             self.evaluation_metrics['quality_scores'].append(quality_score)
@@ -678,7 +682,8 @@ class ProjectArchitect:
                     'quality_score': quality_score,
                     'complexity_level': prompt_complexity,
                     'features_used': list(self.evaluation_metrics['feature_usage_stats'].keys())
-                }
+                },
+                idea_viability_score=idea_viability_score
             )
             
         except Exception as e:
@@ -894,7 +899,8 @@ async def generate_blueprint(request: Dict[str, Any]):
                 }
                 for crit in blueprint.recursive_improvement
             ],
-            "vision_analysis": blueprint.vision_analysis
+            "vision_analysis": blueprint.vision_analysis,
+            "idea_viability_score": blueprint.idea_viability_score
         }
         
         return response_dict
@@ -941,6 +947,33 @@ def add_evaluation_methods_to_project_architect():
         quality_score += complexity_bonus
         
         return min(10, max(1, quality_score))
+
+    def _rate_idea_viability(self, user_input: str) -> int:
+        """Rate the viability of the user's idea on a 1-100 scale."""
+        score = 50  # Base score
+
+        # Heuristics to adjust the score
+        input_lower = user_input.lower()
+
+        # Clarity and specificity
+        if len(user_input) > 100:
+            score += 10
+        if len(user_input) > 200:
+            score += 5
+
+        # Keyword analysis
+        positive_keywords = ["innovative", "unique", "scalable", "market", "problem", "solution"]
+        negative_keywords = ["clone", "copy", "another", "just like"]
+
+        score += sum(1 for keyword in positive_keywords if keyword in input_lower) * 3
+        score -= sum(1 for keyword in negative_keywords if keyword in input_lower) * 5
+
+        # Technical feasibility
+        technical_keywords = ["api", "database", "authentication", "real-time", "machine learning"]
+        if any(keyword in input_lower for keyword in technical_keywords):
+            score += 10
+
+        return min(100, max(1, score))
     
     def _analyze_prompt_complexity(self, user_input: str) -> str:
         """Analyze prompt complexity level"""
@@ -1222,6 +1255,24 @@ async def recommend_tools_for_template(template_name: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+
+@app.get("/api/v1/tools/random")
+async def get_random_tool():
+    """Get a random tool from the AI systems database."""
+    try:
+        random_tool_name = random.choice(list(ai_db.tools.keys()))
+        tool = ai_db.tools[random_tool_name]
+
+        return {
+            "name": tool.name,
+            "category": tool.category.value,
+            "description": tool.description,
+            "performance_score": tool.performance_score,
+            "integration_complexity": tool.integration_complexity,
+            "use_cases": tool.use_cases[:3]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get random tool: {str(e)}")
 
 @app.get("/api/v1/database/statistics")
 async def get_database_statistics():
