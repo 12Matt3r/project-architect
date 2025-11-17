@@ -4,7 +4,7 @@ Advanced AI system that converts natural language app ideas into complete bluepr
 with 5 enhancement features: RSIPV, CCP-R, CADUG, DTCS, and Multi-Modal Integration
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
@@ -51,6 +51,7 @@ class ToolRecommendation:
     confidence_score: float
     performance_reason: str
     integration_complexity: str
+    api_latency_ms: Optional[int] = None
 
 @dataclass
 class ExecutionStep:
@@ -89,6 +90,7 @@ class BlueprintResponse:
     vision_analysis: Optional[Dict[str, Any]] = None
     evaluation_metrics: Optional[Dict[str, Any]] = None
     idea_viability_score: Optional[int] = None
+    cost_prediction: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # ENHANCEMENT 1: RECURSIVE SELF-IMPROVEMENT FOR PLAN VALIDATION (RSIPV)
@@ -444,6 +446,10 @@ class DynamicToolSelector:
         # Adjust confidence based on integration complexity preference
         if requirements["complexity_level"] == "low" and tool.integration_complexity == "High":
             confidence_score *= 0.9
+
+        # Penalize tools with high latency
+        if tool.api_latency_ms and tool.api_latency_ms > 300:
+            confidence_score *= 0.9
         
         performance_reason = f"Selected for {', '.join(tool.capabilities[:2])} with {tool.performance_score}/10 performance rating"
         
@@ -457,7 +463,8 @@ class DynamicToolSelector:
             capability=", ".join(tool.capabilities[:3]),
             confidence_score=min(confidence_score, 0.98),  # Cap at 98%
             performance_reason=performance_reason,
-            integration_complexity=tool.integration_complexity
+            integration_complexity=tool.integration_complexity,
+            api_latency_ms=tool.api_latency_ms
         )
     
     def _get_complementary_tools(self, selected_tools: List[AITool], requirements: Dict[str, Any]) -> List[AITool]:
@@ -568,6 +575,42 @@ class MultiModalProcessor:
             ]
         }
 
+    def process_audio_input(self, audio_data: bytes, text_description: str) -> Dict[str, Any]:
+        """Process uploaded audio and extract information."""
+        # Simulate audio analysis
+        audio_analysis = {
+            "audio_format": "wav",
+            "duration_seconds": 120,
+            "tempo_bpm": 120,
+            "key": "C Major",
+            "mood": "Upbeat"
+        }
+
+        # Combine with text requirements
+        combined_spec = {
+            "audio_analysis": audio_analysis,
+            "functionality_from_text": text_description,
+            "combined_blueprint": self._create_combined_blueprint_audio(audio_analysis, text_description)
+        }
+
+        return combined_spec
+
+    def _create_combined_blueprint_audio(self, audio: Dict[str, Any], text: str) -> Dict[str, Any]:
+        """Create combined audio + functionality specification"""
+        return {
+            "audio_spec": {
+                "tempo": audio["tempo_bpm"],
+                "key": audio["key"],
+                "mood": audio["mood"]
+            },
+            "backend_requirements": text,
+            "integration_points": [
+                "Audio upload handler",
+                "Audio processing API endpoint",
+                "Results display component"
+            ]
+        }
+
 # ============================================================================
 # MAIN PROJECT ARCHITECT ENGINE
 # ============================================================================
@@ -599,8 +642,43 @@ class ProjectArchitect:
             'execution_times': [],
             'success_patterns': {}
         }
+
+    def _fuse_blueprints(self, user_input_a: str, user_input_b: str) -> UserGoal:
+        """Fuse two user inputs into a single, hybrid blueprint."""
+        goal_a = self.goal_decomposer.decompose_user_goal(user_input_a)
+        goal_b = self.goal_decomposer.decompose_user_goal(user_input_b)
+
+        fused_goal = UserGoal(
+            core_problem=f"{goal_a.core_problem} and {goal_b.core_problem}",
+            primary_persona=f"{goal_a.primary_persona} & {goal_b.primary_persona}",
+            most_important_feature=f"{goal_a.most_important_feature} with {goal_b.most_important_feature}",
+            user_success_metric=f"{goal_a.user_success_metric} AND {goal_b.user_success_metric}",
+            inferred_motivation=f"To combine {goal_a.inferred_motivation} with {goal_b.inferred_motivation}"
+        )
+        return fused_goal
+
+    def _predict_cost(self, master_prompt: str) -> Dict[str, Any]:
+        """Predict the cost of running the generated master prompt."""
+        # Simple token count simulation (4 chars per token)
+        token_count = len(master_prompt) / 4
+
+        # Mock pricing model (per 1,000 tokens)
+        input_cost_per_1k = 0.005
+        output_cost_per_1k = 0.015
+
+        # Assuming a 1:3 input to output ratio
+        input_tokens = token_count
+        output_tokens = token_count * 3
+
+        estimated_cost = ((input_tokens / 1000) * input_cost_per_1k) + \
+                         ((output_tokens / 1000) * output_cost_per_1k)
+
+        return {
+            "estimated_tokens": int(input_tokens + output_tokens),
+            "estimated_cost_usd": round(estimated_cost, 4)
+        }
     
-    async def generate_blueprint(self, user_input: str, image_data: Optional[bytes] = None, 
+    async def generate_blueprint(self, user_input: str, file_data: Optional[bytes] = None, filename: Optional[str] = None, user_input_b: Optional[str] = None,
                                 decomposed_goals: Optional[Dict] = None,
                                 selected_tools: Optional[List[str]] = None,
                                 confidence_score: Optional[float] = None) -> BlueprintResponse:
@@ -616,14 +694,22 @@ class ProjectArchitect:
             timestamp = datetime.now().isoformat()
             
             # ENHANCEMENT 3: Context-Aware Decomposition of User Goals (CADUG)
-            user_goal_analysis = self.goal_decomposer.decompose_user_goal(user_input)
+            if user_input_b:
+                user_goal_analysis = self._fuse_blueprints(user_input, user_input_b)
+            else:
+                user_goal_analysis = self.goal_decomposer.decompose_user_goal(user_input)
             self.evaluation_metrics['feature_usage_stats']['CADUG'] += 1
             
             # ENHANCEMENT 5: Multi-Modal Input Integration
             vision_analysis = None
-            if image_data:
-                vision_analysis = self.multi_modal_processor.process_vision_input(image_data, user_input)
-                self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
+            audio_analysis = None
+            if file_data and filename:
+                if any(filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg']):
+                    vision_analysis = self.multi_modal_processor.process_vision_input(file_data, user_input)
+                    self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
+                elif any(filename.lower().endswith(ext) for ext in ['.wav', '.mp3']):
+                    audio_analysis = self.multi_modal_processor.process_audio_input(file_data, user_input)
+                    self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
             
             # Create base blueprint
             base_blueprint = self._create_base_blueprint(user_input, user_goal_analysis, vision_analysis)
@@ -645,6 +731,9 @@ class ProjectArchitect:
             
             # Generate master prompt
             master_prompt = self._generate_master_prompt(user_input, improved_blueprint, execution_steps)
+
+            # Predict cost
+            cost_prediction = self._predict_cost(master_prompt)
             
             # Calculate execution time and update metrics
             execution_time = time.time() - start_time
@@ -683,7 +772,8 @@ class ProjectArchitect:
                     'complexity_level': prompt_complexity,
                     'features_used': list(self.evaluation_metrics['feature_usage_stats'].keys())
                 },
-                idea_viability_score=idea_viability_score
+                idea_viability_score=idea_viability_score,
+                cost_prediction=cost_prediction
             )
             
         except Exception as e:
@@ -845,14 +935,20 @@ class ProjectArchitect:
 architect_engine = ProjectArchitect()
 
 @app.post("/api/v1/generate-blueprint")
-async def generate_blueprint(request: Dict[str, Any]):
+async def generate_blueprint(user_input_a: str = Form(...), user_input_b: str = Form(None), file: UploadFile = File(None)):
     """Main endpoint to generate complete Project ARCHITECT blueprint"""
     try:
-        user_input = request.get("user_input", "")
-        if not user_input:
-            raise HTTPException(status_code=400, detail="user_input is required")
-        
-        blueprint = await architect_engine.generate_blueprint(user_input)
+        if not user_input_a:
+            raise HTTPException(status_code=400, detail="user_input_a is required")
+
+        file_data = await file.read() if file else None
+        filename = file.filename if file else None
+
+        user_input = user_input_a
+        if user_input_b:
+            user_input = f"{user_input_a} FUSED WITH {user_input_b}"
+
+        blueprint = await architect_engine.generate_blueprint(user_input, file_data=file_data, filename=filename, user_input_b=user_input_b)
         
         # Convert to dict for JSON response
         response_dict = {
@@ -865,7 +961,8 @@ async def generate_blueprint(request: Dict[str, Any]):
                     "capability": tool.capability,
                     "confidence_score": tool.confidence_score,
                     "performance_reason": tool.performance_reason,
-                    "integration_complexity": tool.integration_complexity
+                    "integration_complexity": tool.integration_complexity,
+                    "api_latency_ms": tool.api_latency_ms
                 }
                 for tool in blueprint.recommended_toolkit
             ],
@@ -900,7 +997,8 @@ async def generate_blueprint(request: Dict[str, Any]):
                 for crit in blueprint.recursive_improvement
             ],
             "vision_analysis": blueprint.vision_analysis,
-            "idea_viability_score": blueprint.idea_viability_score
+            "idea_viability_score": blueprint.idea_viability_score,
+            "cost_prediction": blueprint.cost_prediction
         }
         
         return response_dict
