@@ -125,6 +125,11 @@ const SimplifiedUI = () => {
         <div style={{ border: '1px solid #ccc', padding: '20px', whiteSpace: 'pre-wrap' }}>
           <h2>Blueprint Generated!</h2>
           <p><strong>Idea Viability Score:</strong> {blueprint.idea_viability_score}/100</p>
+          {blueprint.cost_prediction && (
+            <p>
+              <strong>Estimated Cost:</strong> ${blueprint.cost_prediction.estimated_cost_usd} for an estimated {blueprint.cost_prediction.estimated_tokens} tokens.
+            </p>
+          )}
           <pre>{JSON.stringify(blueprint, null, 2)}</pre>
         </div>
       )}

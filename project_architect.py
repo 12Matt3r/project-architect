@@ -90,6 +90,7 @@ class BlueprintResponse:
     vision_analysis: Optional[Dict[str, Any]] = None
     evaluation_metrics: Optional[Dict[str, Any]] = None
     idea_viability_score: Optional[int] = None
+    cost_prediction: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # ENHANCEMENT 1: RECURSIVE SELF-IMPROVEMENT FOR PLAN VALIDATION (RSIPV)
@@ -655,6 +656,27 @@ class ProjectArchitect:
             inferred_motivation=f"To combine {goal_a.inferred_motivation} with {goal_b.inferred_motivation}"
         )
         return fused_goal
+
+    def _predict_cost(self, master_prompt: str) -> Dict[str, Any]:
+        """Predict the cost of running the generated master prompt."""
+        # Simple token count simulation (4 chars per token)
+        token_count = len(master_prompt) / 4
+
+        # Mock pricing model (per 1,000 tokens)
+        input_cost_per_1k = 0.005
+        output_cost_per_1k = 0.015
+
+        # Assuming a 1:3 input to output ratio
+        input_tokens = token_count
+        output_tokens = token_count * 3
+
+        estimated_cost = ((input_tokens / 1000) * input_cost_per_1k) + \
+                         ((output_tokens / 1000) * output_cost_per_1k)
+
+        return {
+            "estimated_tokens": int(input_tokens + output_tokens),
+            "estimated_cost_usd": round(estimated_cost, 4)
+        }
     
     async def generate_blueprint(self, user_input: str, file_data: Optional[bytes] = None, filename: Optional[str] = None, user_input_b: Optional[str] = None,
                                 decomposed_goals: Optional[Dict] = None,
@@ -709,6 +731,9 @@ class ProjectArchitect:
             
             # Generate master prompt
             master_prompt = self._generate_master_prompt(user_input, improved_blueprint, execution_steps)
+
+            # Predict cost
+            cost_prediction = self._predict_cost(master_prompt)
             
             # Calculate execution time and update metrics
             execution_time = time.time() - start_time
@@ -747,7 +772,8 @@ class ProjectArchitect:
                     'complexity_level': prompt_complexity,
                     'features_used': list(self.evaluation_metrics['feature_usage_stats'].keys())
                 },
-                idea_viability_score=idea_viability_score
+                idea_viability_score=idea_viability_score,
+                cost_prediction=cost_prediction
             )
             
         except Exception as e:
@@ -971,7 +997,8 @@ async def generate_blueprint(user_input_a: str = Form(...), user_input_b: str = 
                 for crit in blueprint.recursive_improvement
             ],
             "vision_analysis": blueprint.vision_analysis,
-            "idea_viability_score": blueprint.idea_viability_score
+            "idea_viability_score": blueprint.idea_viability_score,
+            "cost_prediction": blueprint.cost_prediction
         }
         
         return response_dict
