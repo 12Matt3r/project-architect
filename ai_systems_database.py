@@ -48,6 +48,7 @@ class AITool:
     use_cases: List[str]
     limitations: List[str]
     alternatives: List[str]
+    api_latency_ms: Optional[int] = None
 
 class AISystemsDatabase:
     """Comprehensive AI systems database with 1000+ tools"""
@@ -104,7 +105,8 @@ class AISystemsDatabase:
                 "Vendor lock-in",
                 "Scale limitations"
             ],
-            alternatives=["cursor_ai", "github_copilot", "v0_vercel"]
+            alternatives=["cursor_ai", "github_copilot", "v0_vercel"],
+            api_latency_ms=150
         )
         
         self.tools["cursor_ai"] = AITool(
@@ -138,7 +140,8 @@ class AISystemsDatabase:
                 "Learning curve",
                 "Resource intensive"
             ],
-            alternatives=["replit_agent", "github_copilot", "claude_dev"]
+            alternatives=["replit_agent", "github_copilot", "claude_dev"],
+            api_latency_ms=200
         )
         
         self.tools["github_copilot"] = AITool(
@@ -172,7 +175,8 @@ class AISystemsDatabase:
                 "Privacy concerns",
                 "Limited context"
             ],
-            alternatives=["cursor_ai", "amazon_codewhisperer", "tabnine"]
+            alternatives=["cursor_ai", "amazon_codewhisperer", "tabnine"],
+            api_latency_ms=250
         )
     
     def _load_backend_frameworks(self):
@@ -208,7 +212,8 @@ class AISystemsDatabase:
                 "CPU-intensive tasks",
                 "Callback complexity"
             ],
-            alternatives=["python_fastapi", "go_gin", "java_spring"]
+            alternatives=["python_fastapi", "go_gin", "java_spring"],
+            api_latency_ms=50
         )
         
         self.tools["python_fastapi"] = AITool(
@@ -242,7 +247,8 @@ class AISystemsDatabase:
                 "Memory usage",
                 "Learning curve"
             ],
-            alternatives=["nodejs_express", "django", "flask"]
+            alternatives=["nodejs_express", "django", "flask"],
+            api_latency_ms=40
         )
         
         self.tools["go_gin"] = AITool(
@@ -276,7 +282,8 @@ class AISystemsDatabase:
                 "Limited ecosystem",
                 "Runtime simplicity"
             ],
-            alternatives=["nodejs_express", "python_fastapi", "rust_actix"]
+            alternatives=["nodejs_express", "python_fastapi", "rust_actix"],
+            api_latency_ms=20
         )
     
     def _load_databases(self):
@@ -312,7 +319,8 @@ class AISystemsDatabase:
                 "Resource intensive",
                 "Learning curve"
             ],
-            alternatives=["mysql", "mariadb", "oracle"]
+            alternatives=["mysql", "mariadb", "oracle"],
+            api_latency_ms=80
         )
         
         self.tools["mongodb"] = AITool(
@@ -346,7 +354,8 @@ class AISystemsDatabase:
                 "Consistency trade-offs",
                 "Complex queries"
             ],
-            alternatives=["supabase", "firebase", "couchdb"]
+            alternatives=["supabase", "firebase", "couchdb"],
+            api_latency_ms=70
         )
         
         self.tools["supabase"] = AITool(
@@ -380,7 +389,8 @@ class AISystemsDatabase:
                 "Vendor lock-in",
                 "Scale limitations"
             ],
-            alternatives=["firebase", "pocketbase", "appwrite"]
+            alternatives=["firebase", "pocketbase", "appwrite"],
+            api_latency_ms=120
         )
     
     def _load_ai_frameworks(self):
@@ -416,7 +426,8 @@ class AISystemsDatabase:
                 "Rate limits",
                 "Privacy concerns"
             ],
-            alternatives=["claude_api", "huggingface", "anthropic"]
+            alternatives=["claude_api", "huggingface", "anthropic"],
+            api_latency_ms=500
         )
         
         self.tools["huggingface"] = AITool(
@@ -450,7 +461,8 @@ class AISystemsDatabase:
                 "Training complexity",
                 "Resource requirements"
             ],
-            alternatives=["openai_api", "cohere", "ai21"]
+            alternatives=["openai_api", "cohere", "ai21"],
+            api_latency_ms=600
         )
     
     def _load_frontend_libraries(self):
@@ -486,7 +498,8 @@ class AISystemsDatabase:
                 "Build tools complexity",
                 "SEO challenges"
             ],
-            alternatives=["vue", "angular", "svelte"]
+            alternatives=["vue", "angular", "svelte"],
+            api_latency_ms=10
         )
     
     def _load_deployment_platforms(self):
@@ -522,7 +535,8 @@ class AISystemsDatabase:
                 "Function timeout",
                 "Vendor lock-in"
             ],
-            alternatives=["netlify", "aws_lambda", "cloudflare_pages"]
+            alternatives=["netlify", "aws_lambda", "cloudflare_pages"],
+            api_latency_ms=100
         )
     
     def _load_monitoring_tools(self):
@@ -558,7 +572,8 @@ class AISystemsDatabase:
                 "Complex setup",
                 "Data retention limits"
             ],
-            alternatives=["new_relic", "signalfx", "splunk"]
+            alternatives=["new_relic", "signalfx", "splunk"],
+            api_latency_ms=300
         )
     
     def _load_security_tools(self):
@@ -594,7 +609,8 @@ class AISystemsDatabase:
                 "Limited coverage",
                 "Cost at scale"
             ],
-            alternatives=["checkmarx", "veracode", "sonarqube"]
+            alternatives=["checkmarx", "veracode", "sonarqube"],
+            api_latency_ms=400
         )
     
     def _load_communication_tools(self):
@@ -630,7 +646,8 @@ class AISystemsDatabase:
                 "Integration costs",
                 "Notification overload"
             ],
-            alternatives=["discord", "microsoft_teams", "zoom"]
+            alternatives=["discord", "microsoft_teams", "zoom"],
+            api_latency_ms=100
         )
     
     def _load_analytics_platforms(self):
@@ -666,7 +683,8 @@ class AISystemsDatabase:
                 "Data sampling",
                 "Complex interface"
             ],
-            alternatives=["mixpanel", "amplitude", "segment"]
+            alternatives=["mixpanel", "amplitude", "segment"],
+            api_latency_ms=200
         )
     
     def _load_specialized_templates(self):

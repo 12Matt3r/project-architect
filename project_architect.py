@@ -51,6 +51,7 @@ class ToolRecommendation:
     confidence_score: float
     performance_reason: str
     integration_complexity: str
+    api_latency_ms: Optional[int] = None
 
 @dataclass
 class ExecutionStep:
@@ -444,6 +445,10 @@ class DynamicToolSelector:
         # Adjust confidence based on integration complexity preference
         if requirements["complexity_level"] == "low" and tool.integration_complexity == "High":
             confidence_score *= 0.9
+
+        # Penalize tools with high latency
+        if tool.api_latency_ms and tool.api_latency_ms > 300:
+            confidence_score *= 0.9
         
         performance_reason = f"Selected for {', '.join(tool.capabilities[:2])} with {tool.performance_score}/10 performance rating"
         
@@ -457,7 +462,8 @@ class DynamicToolSelector:
             capability=", ".join(tool.capabilities[:3]),
             confidence_score=min(confidence_score, 0.98),  # Cap at 98%
             performance_reason=performance_reason,
-            integration_complexity=tool.integration_complexity
+            integration_complexity=tool.integration_complexity,
+            api_latency_ms=tool.api_latency_ms
         )
     
     def _get_complementary_tools(self, selected_tools: List[AITool], requirements: Dict[str, Any]) -> List[AITool]:
@@ -865,7 +871,8 @@ async def generate_blueprint(request: Dict[str, Any]):
                     "capability": tool.capability,
                     "confidence_score": tool.confidence_score,
                     "performance_reason": tool.performance_reason,
-                    "integration_complexity": tool.integration_complexity
+                    "integration_complexity": tool.integration_complexity,
+                    "api_latency_ms": tool.api_latency_ms
                 }
                 for tool in blueprint.recommended_toolkit
             ],
