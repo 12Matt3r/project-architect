@@ -71,6 +71,23 @@ class AISystemsDatabase:
         self._load_communication_tools()
         self._load_analytics_platforms()
         self._load_specialized_templates()
+        self._curate_templates()
+
+    def _curate_templates(self):
+        """Calculate and assign a curation score to each template."""
+        for template in self.templates.values():
+            recommended_tools = template.get("recommended_tools", [])
+            if not recommended_tools:
+                template["curation_score"] = 0
+                continue
+
+            total_score = 0
+            for tool_name in recommended_tools:
+                tool = self.get_tool_by_name(tool_name)
+                if tool:
+                    total_score += tool.performance_score
+
+            template["curation_score"] = round(total_score / len(recommended_tools), 2)
     
     def _load_primary_platforms(self):
         """Load primary development platforms"""
@@ -697,7 +714,8 @@ class AISystemsDatabase:
                 "description": "Advanced reasoning system for knowledge graph traversal and inference",
                 "use_cases": ["Research analysis", "Data integration", "Semantic search"],
                 "recommended_tools": ["python_fastapi", "neo4j", "openai_api"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "cross_document_synthesis": {
                 "name": "Cross-Document Synthesis Platform",
@@ -705,7 +723,8 @@ class AISystemsDatabase:
                 "description": "Multi-document analysis and synthesis system",
                 "use_cases": ["Academic research", "Legal analysis", "Market research"],
                 "recommended_tools": ["python_fastapi", "huggingface", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "scientific_literature_analyzer": {
                 "name": "Scientific Literature Analyzer",
@@ -713,7 +732,8 @@ class AISystemsDatabase:
                 "description": "Automated analysis of scientific papers and publications",
                 "use_cases": ["Research review", "Citation analysis", "Trend identification"],
                 "recommended_tools": ["python_fastapi", "huggingface", "mongodb"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "multi_source_verification": {
                 "name": "Multi-Source Verification System",
@@ -721,7 +741,8 @@ class AISystemsDatabase:
                 "description": "Fact-checking and source verification platform",
                 "use_cases": ["News verification", "Fact-checking", "Research validation"],
                 "recommended_tools": ["python_fastapi", "openai_api", "postgresql"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
 
             # Domain 2: Creative Fusion & Innovation (12 templates)
@@ -731,7 +752,8 @@ class AISystemsDatabase:
                 "description": "Generates code from natural language descriptions",
                 "use_cases": ["Rapid prototyping", "Code generation", "Development acceleration"],
                 "recommended_tools": ["openai_api", "python_fastapi", "react"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "creative_writing_assistant": {
                 "name": "Creative Writing Assistant",
@@ -739,7 +761,8 @@ class AISystemsDatabase:
                 "description": "AI-powered creative writing and storytelling assistant",
                 "use_cases": ["Content creation", "Story writing", "Copywriting"],
                 "recommended_tools": ["openai_api", "nodejs_express", "react"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "music_style_transfer": {
                 "name": "Music Style Transfer System",
@@ -747,7 +770,8 @@ class AISystemsDatabase:
                 "description": "AI system for transferring musical styles between tracks",
                 "use_cases": ["Music production", "Style analysis", "Creative composition"],
                 "recommended_tools": ["python_fastapi", "tensorflow", "supabase"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "visual_design_generator": {
                 "name": "Visual Design Generator",
@@ -755,7 +779,8 @@ class AISystemsDatabase:
                 "description": "AI-powered visual design and layout generation",
                 "use_cases": ["Design automation", "Layout creation", "Brand identity"],
                 "recommended_tools": ["openai_api", "react", "supabase"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "video_content_creator": {
                 "name": "Video Content Creator",
@@ -763,7 +788,8 @@ class AISystemsDatabase:
                 "description": "Automated video content generation and editing system",
                 "use_cases": ["Content creation", "Marketing videos", "Educational content"],
                 "recommended_tools": ["python_fastapi", "openai_api", "supabase"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "interactive_story_engine": {
                 "name": "Interactive Story Engine",
@@ -771,7 +797,8 @@ class AISystemsDatabase:
                 "description": "Dynamic storytelling system with branching narratives",
                 "use_cases": ["Interactive fiction", "Game narratives", "Educational stories"],
                 "recommended_tools": ["nodejs_express", "openai_api", "mongodb"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "art_style_transfer": {
                 "name": "Art Style Transfer Tool",
@@ -779,7 +806,8 @@ class AISystemsDatabase:
                 "description": "Neural style transfer for artistic image generation",
                 "use_cases": ["Art creation", "Style analysis", "Digital art"],
                 "recommended_tools": ["python_fastapi", "tensorflow", "supabase"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "poetry_generation_system": {
                 "name": "Poetry Generation System",
@@ -787,7 +815,8 @@ class AISystemsDatabase:
                 "description": "AI system for generating poetry in various styles",
                 "use_cases": ["Literary creation", "Content generation", "Therapeutic writing"],
                 "recommended_tools": ["openai_api", "python_fastapi", "mongodb"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "logo_design_assistant": {
                 "name": "Logo Design Assistant",
@@ -795,7 +824,8 @@ class AISystemsDatabase:
                 "description": "AI-powered logo design and brand identity creation",
                 "use_cases": ["Brand design", "Logo creation", "Identity systems"],
                 "recommended_tools": ["openai_api", "react", "supabase"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "brand_story_generator": {
                 "name": "Brand Story Generator",
@@ -803,7 +833,8 @@ class AISystemsDatabase:
                 "description": "Automated brand narrative and storytelling creation",
                 "use_cases": ["Brand development", "Marketing content", "Corporate communications"],
                 "recommended_tools": ["openai_api", "nodejs_express", "postgresql"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "creative_brainstorming_platform": {
                 "name": "Creative Brainstorming Platform",
@@ -811,7 +842,8 @@ class AISystemsDatabase:
                 "description": "AI-enhanced ideation and creative brainstorming system",
                 "use_cases": ["Idea generation", "Creative workshops", "Innovation sessions"],
                 "recommended_tools": ["openai_api", "nodejs_express", "react"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "innovation_catalyst_system": {
                 "name": "Innovation Catalyst System",
@@ -819,7 +851,8 @@ class AISystemsDatabase:
                 "description": "Systematic innovation and creative problem-solving platform",
                 "use_cases": ["Innovation workshops", "Problem solving", "Strategic planning"],
                 "recommended_tools": ["python_fastapi", "openai_api", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
 
             # Domain 3: Logic & Simulation Architectures (4 templates)
@@ -829,7 +862,8 @@ class AISystemsDatabase:
                 "description": "Digital circuit design and simulation system",
                 "use_cases": ["Hardware design", "Education", "System modeling"],
                 "recommended_tools": ["python_fastapi", "javascript", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "financial_simulation_engine": {
                 "name": "Financial Simulation Engine",
@@ -837,7 +871,8 @@ class AISystemsDatabase:
                 "description": "Monte Carlo and scenario-based financial modeling",
                 "use_cases": ["Risk analysis", "Portfolio optimization", "Financial planning"],
                 "recommended_tools": ["python_fastapi", "numpy", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "supply_chain_optimizer": {
                 "name": "Supply Chain Optimizer",
@@ -845,7 +880,8 @@ class AISystemsDatabase:
                 "description": "Supply chain optimization and logistics simulation",
                 "use_cases": ["Logistics optimization", "Inventory management", "Operations planning"],
                 "recommended_tools": ["python_fastapi", "gurobi", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "process_flow_analyzer": {
                 "name": "Process Flow Analyzer",
@@ -853,7 +889,8 @@ class AISystemsDatabase:
                 "description": "Business process modeling and optimization system",
                 "use_cases": ["Process improvement", "Workflow optimization", "Business analysis"],
                 "recommended_tools": ["nodejs_express", "react", "mongodb"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
 
             # Domain 4: Interactive & Productivity Agents (4 templates)
@@ -863,7 +900,8 @@ class AISystemsDatabase:
                 "description": "Intelligent task automation and workflow management",
                 "use_cases": ["Process automation", "Workflow management", "Task scheduling"],
                 "recommended_tools": ["nodejs_express", "python_fastapi", "postgresql"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "meeting_summarizer": {
                 "name": "Meeting Summarizer",
@@ -871,7 +909,8 @@ class AISystemsDatabase:
                 "description": "AI-powered meeting transcription and summarization",
                 "use_cases": ["Meeting notes", "Action items", "Communication"],
                 "recommended_tools": ["openai_api", "python_fastapi", "supabase"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "email_response_generator": {
                 "name": "Email Response Generator",
@@ -879,7 +918,8 @@ class AISystemsDatabase:
                 "description": "Intelligent email response and communication assistant",
                 "use_cases": ["Email automation", "Customer support", "Communication"],
                 "recommended_tools": ["openai_api", "nodejs_express", "mongodb"],
-                "complexity": "Low"
+                "complexity": "Low",
+                "curation_score": None
             },
             "project_management_assistant": {
                 "name": "Project Management Assistant",
@@ -887,7 +927,8 @@ class AISystemsDatabase:
                 "description": "AI-enhanced project planning and management system",
                 "use_cases": ["Project planning", "Resource allocation", "Progress tracking"],
                 "recommended_tools": ["nodejs_express", "react", "postgresql"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
 
             # Domain 5: Ethical & Governance Architect (5 templates)
@@ -897,7 +938,8 @@ class AISystemsDatabase:
                 "description": "AI system for detecting and mitigating bias in data and models",
                 "use_cases": ["AI fairness", "Bias auditing", "Ethical AI"],
                 "recommended_tools": ["python_fastapi", "scikit_learn", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "privacy_compliance_checker": {
                 "name": "Privacy Compliance Checker",
@@ -905,7 +947,8 @@ class AISystemsDatabase:
                 "description": "Automated privacy regulation compliance assessment",
                 "use_cases": ["GDPR compliance", "Privacy auditing", "Data protection"],
                 "recommended_tools": ["python_fastapi", "regex", "mongodb"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "fairness_audit_tool": {
                 "name": "Fairness Audit Tool",
@@ -913,7 +956,8 @@ class AISystemsDatabase:
                 "description": "Comprehensive AI fairness and ethics auditing platform",
                 "use_cases": ["AI ethics", "Fairness assessment", "Compliance checking"],
                 "recommended_tools": ["python_fastapi", "pandas", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "ethical_decision_framework": {
                 "name": "Ethical Decision Framework",
@@ -921,7 +965,8 @@ class AISystemsDatabase:
                 "description": "Systematic approach to ethical decision-making in AI",
                 "use_cases": ["Ethical guidance", "Decision support", "Governance"],
                 "recommended_tools": ["python_fastapi", "react", "postgresql"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "governance_monitoring_system": {
                 "name": "Governance Monitoring System",
@@ -929,7 +974,8 @@ class AISystemsDatabase:
                 "description": "AI governance and compliance monitoring platform",
                 "use_cases": ["AI governance", "Compliance monitoring", "Risk assessment"],
                 "recommended_tools": ["python_fastapi", "elasticsearch", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
 
             # Domain 6: Generative & Recursive Creation (5 templates)
@@ -939,7 +985,8 @@ class AISystemsDatabase:
                 "description": "Code that can analyze and improve itself recursively",
                 "use_cases": ["Self-optimization", "Code improvement", "Adaptive systems"],
                 "recommended_tools": ["python_fastapi", "openai_api", "mongodb"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "recursive_problem_solver": {
                 "name": "Recursive Problem Solver",
@@ -947,7 +994,8 @@ class AISystemsDatabase:
                 "description": "System that recursively breaks down and solves complex problems",
                 "use_cases": ["Complex problem solving", "Mathematical analysis", "Strategic planning"],
                 "recommended_tools": ["python_fastapi", "sympy", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "meta_learning_framework": {
                 "name": "Meta-Learning Framework",
@@ -955,7 +1003,8 @@ class AISystemsDatabase:
                 "description": "AI system that learns how to learn across domains",
                 "use_cases": ["Learning optimization", "Transfer learning", "Adaptive AI"],
                 "recommended_tools": ["python_fastapi", "pytorch", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "adaptive_algorithm_generator": {
                 "name": "Adaptive Algorithm Generator",
@@ -963,7 +1012,8 @@ class AISystemsDatabase:
                 "description": "System that generates algorithms that adapt to changing conditions",
                 "use_cases": ["Algorithm design", "Adaptive systems", "Optimization"],
                 "recommended_tools": ["python_fastapi", "numpy", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "evolutionary_design_system": {
                 "name": "Evolutionary Design System",
@@ -971,7 +1021,8 @@ class AISystemsDatabase:
                 "description": "Evolutionary algorithms for design optimization",
                 "use_cases": ["Design optimization", "Evolutionary computing", "Creative design"],
                 "recommended_tools": ["python_fastapi", "deap", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
 
             # Domain 7: Multi-Modal & Agentic Workflow (5 templates)
@@ -981,7 +1032,8 @@ class AISystemsDatabase:
                 "description": "ReAct-powered e-commerce recommendation and analysis agent",
                 "use_cases": ["Product recommendations", "Customer analysis", "E-commerce optimization"],
                 "recommended_tools": ["python_fastapi", "openai_api", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "cross_document_analysis": {
                 "name": "Cross-Document Analysis System",
@@ -989,7 +1041,8 @@ class AISystemsDatabase:
                 "description": "Multi-document analysis and synthesis platform",
                 "use_cases": ["Document analysis", "Research synthesis", "Content comparison"],
                 "recommended_tools": ["python_fastapi", "huggingface", "mongodb"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "multimodal_content_processor": {
                 "name": "Multi-Modal Content Processor",
@@ -997,7 +1050,8 @@ class AISystemsDatabase:
                 "description": "Processes and analyzes multiple content types simultaneously",
                 "use_cases": ["Content analysis", "Media processing", "Multi-modal AI"],
                 "recommended_tools": ["python_fastapi", "opencv", "postgresql"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
             "workflow_orchestration_engine": {
                 "name": "Workflow Orchestration Engine",
@@ -1005,7 +1059,8 @@ class AISystemsDatabase:
                 "description": "Intelligent workflow orchestration and management system",
                 "use_cases": ["Process automation", "Workflow management", "Task coordination"],
                 "recommended_tools": ["nodejs_express", "python_fastapi", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "agent_collaboration_framework": {
                 "name": "Agent Collaboration Framework",
@@ -1013,7 +1068,8 @@ class AISystemsDatabase:
                 "description": "Framework for multi-agent collaboration and coordination",
                 "use_cases": ["Multi-agent systems", "Agent coordination", "Collaborative AI"],
                 "recommended_tools": ["python_fastapi", "celery", "mongodb"],
-                "complexity": "Very High"
+                "complexity": "Very High",
+                "curation_score": None
             },
 
             # Domain 8: Advanced Data & Financials (5 templates)
@@ -1023,7 +1079,8 @@ class AISystemsDatabase:
                 "description": "Advanced financial modeling with Sharpe Ratio, Sortino, Maximum Drawdown",
                 "use_cases": ["Risk assessment", "Portfolio management", "Financial planning"],
                 "recommended_tools": ["python_fastapi", "numpy", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "inventory_demand_predictor": {
                 "name": "Inventory Demand Predictor",
@@ -1031,7 +1088,8 @@ class AISystemsDatabase:
                 "description": "Time-series forecasting for inventory management",
                 "use_cases": ["Demand forecasting", "Inventory optimization", "Supply planning"],
                 "recommended_tools": ["python_fastapi", "pandas", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "unstructured_data_summarizer": {
                 "name": "Unstructured Data Summarizer",
@@ -1039,7 +1097,8 @@ class AISystemsDatabase:
                 "description": "NLP processing for unstructured data analysis and summarization",
                 "use_cases": ["Text analysis", "Data summarization", "Information extraction"],
                 "recommended_tools": ["python_fastapi", "nltk", "mongodb"],
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "curation_score": None
             },
             "cross_database_query_generator": {
                 "name": "Cross-Database Query Generator",
@@ -1047,7 +1106,8 @@ class AISystemsDatabase:
                 "description": "Natural language to SQL for PostgreSQL, MySQL, MongoDB",
                 "use_cases": ["Database queries", "Data access", "BI integration"],
                 "recommended_tools": ["python_fastapi", "sqlparse", "postgresql"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             },
             "hyper_personalized_recommendation": {
                 "name": "Hyper-Personalized Recommendation System",
@@ -1055,7 +1115,8 @@ class AISystemsDatabase:
                 "description": "Behavioral psychology-based recommendation engine",
                 "use_cases": ["Personalization", "User profiling", "Behavioral analysis"],
                 "recommended_tools": ["python_fastapi", "scikit_learn", "mongodb"],
-                "complexity": "High"
+                "complexity": "High",
+                "curation_score": None
             }
         }
     

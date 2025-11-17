@@ -6,6 +6,7 @@ const SimplifiedUI = () => {
   const [file, setFile] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [randomTool, setRandomTool] = useState(null);
+  const [curatedTemplates, setCuratedTemplates] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleFileChange = (event) => {
@@ -71,6 +72,27 @@ const SimplifiedUI = () => {
     }
   };
 
+  const handleViewCuratedTemplates = async () => {
+    setIsGenerating(true);
+    setBlueprint(null);
+    setRandomTool(null);
+    setCuratedTemplates(null);
+
+    try {
+      const response = await fetch('/api/v1/templates/curated');
+      if (!response.ok) {
+        throw new Error('Failed to fetch curated templates');
+      }
+      const data = await response.json();
+      setCuratedTemplates(data);
+    } catch (error) {
+      console.error('Error fetching curated templates:', error);
+      alert('Failed to fetch curated templates. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const promptSuggestions = [
     "Design a complex RAG pipeline",
     "Generate a Recursive Feature Generator",
@@ -108,6 +130,9 @@ const SimplifiedUI = () => {
         <button onClick={handleRandomTool} disabled={isGenerating}>
           Suggest a Random Tool
         </button>
+        <button onClick={handleViewCuratedTemplates} disabled={isGenerating}>
+          View Curated Templates
+        </button>
       </div>
 
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -140,6 +165,18 @@ const SimplifiedUI = () => {
           <p><strong>Name:</strong> {randomTool.name}</p>
           <p><strong>Category:</strong> {randomTool.category}</p>
           <p><strong>Description:</strong> {randomTool.description}</p>
+        </div>
+      )}
+
+      {curatedTemplates && (
+        <div style={{ border: '1px solid #ccc', padding: '20px' }}>
+          <h2>Curated Templates</h2>
+          {curatedTemplates.map((template, index) => (
+            <div key={index} style={{ marginBottom: '10px' }}>
+              <p><strong>{template.name}</strong> (Score: {template.curation_score})</p>
+              <p>{template.description}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
