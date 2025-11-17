@@ -1,6 +1,5 @@
 {
-  "name": "project-architect",
-  "version": 1.0,
+  "version": 2,
   "builds": [
     {
       "src": "project_architect.py",
@@ -12,13 +11,5 @@
       "src": "/(.*)",
       "dest": "/project_architect.py"
     }
-  ],
-  "functions": {
-    "project_architect.py": {
-      "runtime": "python3.11"
-    }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/project_architect.py" }
   ]
 }
