@@ -1372,6 +1372,19 @@ async def get_random_tool():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get random tool: {str(e)}")
 
+@app.get("/api/v1/templates/curated")
+async def get_curated_templates():
+    """Get all templates, sorted by curation score."""
+    try:
+        sorted_templates = sorted(
+            ai_db.templates.values(),
+            key=lambda t: t.get("curation_score", 0),
+            reverse=True
+        )
+        return sorted_templates
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch curated templates: {str(e)}")
+
 @app.get("/api/v1/database/statistics")
 async def get_database_statistics():
     """Get detailed database statistics"""
