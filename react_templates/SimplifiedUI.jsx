@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 
 const SimplifiedUI = () => {
   const [userInput, setUserInput] = useState('');
+  const [file, setFile] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [randomTool, setRandomTool] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
 
   const handleGenerate = async () => {
     if (!userInput.trim()) {
@@ -17,12 +22,15 @@ const SimplifiedUI = () => {
     setRandomTool(null);
 
     try {
+      const formData = new FormData();
+      formData.append('user_input', userInput);
+      if (file) {
+        formData.append('file', file);
+      }
+
       const response = await fetch('/api/v1/generate-blueprint', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_input: userInput }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -76,6 +84,9 @@ const SimplifiedUI = () => {
           rows="4"
           style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
         />
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <input type="file" onChange={handleFileChange} />
       </div>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
         <button onClick={handleGenerate} disabled={isGenerating}>

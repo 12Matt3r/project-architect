@@ -4,7 +4,7 @@ Advanced AI system that converts natural language app ideas into complete bluepr
 with 5 enhancement features: RSIPV, CCP-R, CADUG, DTCS, and Multi-Modal Integration
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
@@ -574,6 +574,42 @@ class MultiModalProcessor:
             ]
         }
 
+    def process_audio_input(self, audio_data: bytes, text_description: str) -> Dict[str, Any]:
+        """Process uploaded audio and extract information."""
+        # Simulate audio analysis
+        audio_analysis = {
+            "audio_format": "wav",
+            "duration_seconds": 120,
+            "tempo_bpm": 120,
+            "key": "C Major",
+            "mood": "Upbeat"
+        }
+
+        # Combine with text requirements
+        combined_spec = {
+            "audio_analysis": audio_analysis,
+            "functionality_from_text": text_description,
+            "combined_blueprint": self._create_combined_blueprint_audio(audio_analysis, text_description)
+        }
+
+        return combined_spec
+
+    def _create_combined_blueprint_audio(self, audio: Dict[str, Any], text: str) -> Dict[str, Any]:
+        """Create combined audio + functionality specification"""
+        return {
+            "audio_spec": {
+                "tempo": audio["tempo_bpm"],
+                "key": audio["key"],
+                "mood": audio["mood"]
+            },
+            "backend_requirements": text,
+            "integration_points": [
+                "Audio upload handler",
+                "Audio processing API endpoint",
+                "Results display component"
+            ]
+        }
+
 # ============================================================================
 # MAIN PROJECT ARCHITECT ENGINE
 # ============================================================================
@@ -606,7 +642,7 @@ class ProjectArchitect:
             'success_patterns': {}
         }
     
-    async def generate_blueprint(self, user_input: str, image_data: Optional[bytes] = None, 
+    async def generate_blueprint(self, user_input: str, file_data: Optional[bytes] = None, filename: Optional[str] = None,
                                 decomposed_goals: Optional[Dict] = None,
                                 selected_tools: Optional[List[str]] = None,
                                 confidence_score: Optional[float] = None) -> BlueprintResponse:
@@ -627,9 +663,14 @@ class ProjectArchitect:
             
             # ENHANCEMENT 5: Multi-Modal Input Integration
             vision_analysis = None
-            if image_data:
-                vision_analysis = self.multi_modal_processor.process_vision_input(image_data, user_input)
-                self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
+            audio_analysis = None
+            if file_data and filename:
+                if any(filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg']):
+                    vision_analysis = self.multi_modal_processor.process_vision_input(file_data, user_input)
+                    self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
+                elif any(filename.lower().endswith(ext) for ext in ['.wav', '.mp3']):
+                    audio_analysis = self.multi_modal_processor.process_audio_input(file_data, user_input)
+                    self.evaluation_metrics['feature_usage_stats']['Multi-Modal'] += 1
             
             # Create base blueprint
             base_blueprint = self._create_base_blueprint(user_input, user_goal_analysis, vision_analysis)
@@ -851,14 +892,15 @@ class ProjectArchitect:
 architect_engine = ProjectArchitect()
 
 @app.post("/api/v1/generate-blueprint")
-async def generate_blueprint(request: Dict[str, Any]):
+async def generate_blueprint(user_input: str = Form(...), file: UploadFile = File(None)):
     """Main endpoint to generate complete Project ARCHITECT blueprint"""
     try:
-        user_input = request.get("user_input", "")
         if not user_input:
             raise HTTPException(status_code=400, detail="user_input is required")
-        
-        blueprint = await architect_engine.generate_blueprint(user_input)
+
+        file_data = await file.read() if file else None
+        filename = file.filename if file else None
+        blueprint = await architect_engine.generate_blueprint(user_input, file_data=file_data, filename=filename)
         
         # Convert to dict for JSON response
         response_dict = {
