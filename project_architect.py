@@ -641,8 +641,22 @@ class ProjectArchitect:
             'execution_times': [],
             'success_patterns': {}
         }
+
+    def _fuse_blueprints(self, user_input_a: str, user_input_b: str) -> UserGoal:
+        """Fuse two user inputs into a single, hybrid blueprint."""
+        goal_a = self.goal_decomposer.decompose_user_goal(user_input_a)
+        goal_b = self.goal_decomposer.decompose_user_goal(user_input_b)
+
+        fused_goal = UserGoal(
+            core_problem=f"{goal_a.core_problem} and {goal_b.core_problem}",
+            primary_persona=f"{goal_a.primary_persona} & {goal_b.primary_persona}",
+            most_important_feature=f"{goal_a.most_important_feature} with {goal_b.most_important_feature}",
+            user_success_metric=f"{goal_a.user_success_metric} AND {goal_b.user_success_metric}",
+            inferred_motivation=f"To combine {goal_a.inferred_motivation} with {goal_b.inferred_motivation}"
+        )
+        return fused_goal
     
-    async def generate_blueprint(self, user_input: str, file_data: Optional[bytes] = None, filename: Optional[str] = None,
+    async def generate_blueprint(self, user_input: str, file_data: Optional[bytes] = None, filename: Optional[str] = None, user_input_b: Optional[str] = None,
                                 decomposed_goals: Optional[Dict] = None,
                                 selected_tools: Optional[List[str]] = None,
                                 confidence_score: Optional[float] = None) -> BlueprintResponse:
@@ -658,7 +672,10 @@ class ProjectArchitect:
             timestamp = datetime.now().isoformat()
             
             # ENHANCEMENT 3: Context-Aware Decomposition of User Goals (CADUG)
-            user_goal_analysis = self.goal_decomposer.decompose_user_goal(user_input)
+            if user_input_b:
+                user_goal_analysis = self._fuse_blueprints(user_input, user_input_b)
+            else:
+                user_goal_analysis = self.goal_decomposer.decompose_user_goal(user_input)
             self.evaluation_metrics['feature_usage_stats']['CADUG'] += 1
             
             # ENHANCEMENT 5: Multi-Modal Input Integration
@@ -892,15 +909,20 @@ class ProjectArchitect:
 architect_engine = ProjectArchitect()
 
 @app.post("/api/v1/generate-blueprint")
-async def generate_blueprint(user_input: str = Form(...), file: UploadFile = File(None)):
+async def generate_blueprint(user_input_a: str = Form(...), user_input_b: str = Form(None), file: UploadFile = File(None)):
     """Main endpoint to generate complete Project ARCHITECT blueprint"""
     try:
-        if not user_input:
-            raise HTTPException(status_code=400, detail="user_input is required")
+        if not user_input_a:
+            raise HTTPException(status_code=400, detail="user_input_a is required")
 
         file_data = await file.read() if file else None
         filename = file.filename if file else None
-        blueprint = await architect_engine.generate_blueprint(user_input, file_data=file_data, filename=filename)
+
+        user_input = user_input_a
+        if user_input_b:
+            user_input = f"{user_input_a} FUSED WITH {user_input_b}"
+
+        blueprint = await architect_engine.generate_blueprint(user_input, file_data=file_data, filename=filename, user_input_b=user_input_b)
         
         # Convert to dict for JSON response
         response_dict = {

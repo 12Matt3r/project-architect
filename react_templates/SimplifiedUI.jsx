@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
 const SimplifiedUI = () => {
-  const [userInput, setUserInput] = useState('');
+  const [userInputA, setUserInputA] = useState('');
+  const [userInputB, setUserInputB] = useState('');
   const [file, setFile] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [randomTool, setRandomTool] = useState(null);
@@ -12,7 +13,7 @@ const SimplifiedUI = () => {
   };
 
   const handleGenerate = async () => {
-    if (!userInput.trim()) {
+    if (!userInputA.trim()) {
       alert('Please enter an app idea.');
       return;
     }
@@ -23,7 +24,10 @@ const SimplifiedUI = () => {
 
     try {
       const formData = new FormData();
-      formData.append('user_input', userInput);
+      formData.append('user_input_a', userInputA);
+      if (userInputB.trim()) {
+        formData.append('user_input_b', userInputB);
+      }
       if (file) {
         formData.append('file', file);
       }
@@ -78,9 +82,18 @@ const SimplifiedUI = () => {
       <h1 style={{ textAlign: 'center' }}>Project ARCHITECT</h1>
       <div style={{ marginBottom: '20px' }}>
         <textarea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Enter your app idea here..."
+          value={userInputA}
+          onChange={(e) => setUserInputA(e.target.value)}
+          placeholder="Enter your first app idea here..."
+          rows="4"
+          style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
+        />
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <textarea
+          value={userInputB}
+          onChange={(e) => setUserInputB(e.target.value)}
+          placeholder="Enter your second app idea to fuse (optional)..."
           rows="4"
           style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
         />
@@ -101,7 +114,7 @@ const SimplifiedUI = () => {
         <p>Prompt Suggestions:</p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {promptSuggestions.map((prompt, index) => (
-            <button key={index} onClick={() => setUserInput(prompt)} style={{ background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer' }}>
+            <button key={index} onClick={() => setUserInputA(prompt)} style={{ background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer' }}>
               {prompt}
             </button>
           ))}
